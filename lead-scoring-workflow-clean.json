@@ -1,0 +1,1405 @@
+{
+  "name": "AI Lead Generation & Scoring Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Request a Consultation",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Full Name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Company"
+            },
+            {
+              "fieldLabel": "Phone",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email",
+              "fieldType": "email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Role",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Owner/CEO"
+                  },
+                  {
+                    "option": "Manager"
+                  },
+                  {
+                    "option": "Expert"
+                  },
+                  {
+                    "option": "Individual/Student"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Company Size",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "1-10"
+                  },
+                  {
+                    "option": "11-50"
+                  },
+                  {
+                    "option": "51-200"
+                  },
+                  {
+                    "option": "200+"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Budget",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "<50M"
+                  },
+                  {
+                    "option": "50-200M"
+                  },
+                  {
+                    "option": "200-500M"
+                  },
+                  {
+                    "option": ">500M"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Timeline",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Immediate (<1 month)"
+                  },
+                  {
+                    "option": "1-3 months"
+                  },
+                  {
+                    "option": "3+ months"
+                  },
+                  {
+                    "option": "Just exploring"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Source",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Referral"
+                  },
+                  {
+                    "option": "Event/Webinar"
+                  },
+                  {
+                    "option": "Website"
+                  },
+                  {
+                    "option": "Ads"
+                  },
+                  {
+                    "option": "Social"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Need Description",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        -992,
+        -80
+      ],
+      "id": "e822cf6e-2554-4350-84ce-5e8f168e5cbd",
+      "name": "Request a Consultation"
+    },
+    {
+      "parameters": {
+        "jsCode": "const f = $input.first().json;\nconst fa = '۰۱۲۳۴۵۶۷۸۹';\nconst norm = s => String(s ?? '').replace(/[۰-۹]/g, d => fa.indexOf(d)).trim();\nlet phone = norm(f['Phone']).replace(/[\\s-]/g, '');\nif (phone.startsWith('+98')) phone = '0' + phone.slice(3);\nelse if (phone.startsWith('98')) phone = '0' + phone.slice(2);\nconst email = norm(f['Email']).toLowerCase();\nconst name = norm(f['Full Name']);\nconst need = norm(f['Need Description']);\nconst errors = [];\nif (name.length < 3) errors.push('invalid name');\nif (!/^09\\d{9}$/.test(phone)) errors.push('invalid phone');\nif (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/.test(email)) errors.push('invalid email');\nif (need.length < 10) errors.push('need too short');\nconst optional = ['Company','Role','Company Size','Source'].filter(k => f[k]).length;\nreturn [{ json: {\n  name, company: norm(f['Company']), phone, email,\n  role: f['Role'] || '', size: f['Company Size'] || '',\n  budget: f['Budget'], timeline: f['Timeline'], source: f['Source'] || '',\n  need, valid: errors.length === 0, errors: errors.join(', '),\n  completeness: Math.round(optional / 4 * 100),\n  submittedAt: new Date().toISOString()\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -800,
+        -80
+      ],
+      "id": "668f3f16-d7b0-46e4-8017-2ce74c38bba3",
+      "name": "Validate & Normalize"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "49d9e512-8f88-4087-96ff-e7659a399c20",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        -624,
+        -80
+      ],
+      "id": "5d3571d7-c5c0-4bbf-9adb-f4c94c004fe3",
+      "name": "Valid?"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "YOUR_SPREADSHEET_NAME"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Incomplete"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "errors",
+              "displayName": "errors",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "need",
+              "displayName": "need",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "valid",
+              "displayName": "valid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "completeness",
+              "displayName": "completeness",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "submittedAt",
+              "displayName": "submittedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "role",
+              "displayName": "role",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "size",
+              "displayName": "size",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "budget",
+              "displayName": "budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "timeline",
+              "displayName": "timeline",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -480,
+        208
+      ],
+      "id": "97135f97-2513-460a-b9a9-d063b385b8dd",
+      "name": "Log Incomplete",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "YOUR_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "YOUR_SPREADSHEET_NAME"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1572208784,
+          "mode": "list",
+          "cachedResultName": "Leads"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -464,
+        -352
+      ],
+      "id": "c71affb8-f1ae-4918-a4bb-9b1152894b23",
+      "name": "Read Existing Leads",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "YOUR_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const lead = $('Validate & Normalize').first().json;\nconst last10 = v => String(v ?? '').replace(/\\D/g, '').slice(-10);\nconst dup = $input.all().find(i =>\n  (i.json.phone && last10(i.json.phone) === last10(lead.phone)) ||\n  (i.json.email && String(i.json.email).toLowerCase() === lead.email));\nreturn [{ json: { ...lead, isDuplicate: !!dup } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -272,
+        -352
+      ],
+      "id": "45165d7f-3d2d-4d08-b9b3-a313b3286f0a",
+      "name": "Duplicate Check"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "6a0aca5d-1412-4830-9a0a-4ca3ccce1445",
+              "leftValue": "={{ $json.isDuplicate }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        -80,
+        -352
+      ],
+      "id": "cd66664f-b2db-4251-82ba-512088c3b9d4",
+      "name": "Is Duplicate?"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "YOUR_SPREADSHEET_NAME"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 2135073213,
+          "mode": "list",
+          "cachedResultName": "Duplicates"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "errors",
+              "displayName": "errors",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "role",
+              "displayName": "role",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "size",
+              "displayName": "size",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "budget",
+              "displayName": "budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "timeline",
+              "displayName": "timeline",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "need",
+              "displayName": "need",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "valid",
+              "displayName": "valid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "completeness",
+              "displayName": "completeness",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "submittedAt",
+              "displayName": "submittedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "isDuplicate",
+              "displayName": "isDuplicate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        160,
+        -432
+      ],
+      "id": "4350c385-dfad-476b-9f1f-8e3eb94abd03",
+      "name": "Log Duplicate",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "YOUR_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Company: {{ $json.company }}\nRole: {{ $json.role }}\nBudget: {{ $json.budget }}\nTimeline: {{ $json.timeline }}\nNeed: {{ $json.need }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a B2B sales analyst. Analyze the customer's need text (may be Persian). Return needClarity (0-10): how specific and purchase-ready the need is (quantities, deadlines, concrete product, request for quote = high; vague curiosity, student/research only = low). Also return a one-sentence English summary and a product category."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        32,
+        -112
+      ],
+      "id": "b9287346-edf5-4136-b5bd-9d67b4158d6b",
+      "name": "Lead Analyst Agent"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"needClarity\": 7,\n  \"summary\": \"Company needs a CRM for 40 sales reps and plans to sign this month.\",\n  \"productCategory\": \"CRM\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        176,
+        112
+      ],
+      "id": "b491f170-3f38-4144-b6ed-6d813893618d",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -16,
+        96
+      ],
+      "id": "41691db7-de10-433f-bc79-69d7f19101b7",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "YOUR_OPENAI_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const lead = $('Duplicate Check').first().json;\nconst ai = $json.output || {};\nconst M = {\n  budget:   {'<50M':0,'50-200M':8,'200-500M':17,'>500M':25},\n  timeline: {'Immediate (<1 month)':20,'1-3 months':13,'3+ months':6,'Just exploring':0},\n  role:     {'Owner/CEO':15,'Manager':11,'Expert':5,'Individual/Student':1},\n  size:     {'1-10':2,'11-50':4,'51-200':7,'200+':10},\n  source:   {'Referral':10,'Event/Webinar':8,'Website':6,'Ads':4,'Social':3}\n};\nconst b = {\n  budget: M.budget[lead.budget] ?? 0,\n  timeline: M.timeline[lead.timeline] ?? 0,\n  authority: M.role[lead.role] ?? 3,\n  companySize: M.size[lead.size] ?? 0,\n  needClarity: Math.max(0, Math.min(10, Number(ai.needClarity) || 0)),\n  source: M.source[lead.source] ?? 2,\n  completeness: Math.round(lead.completeness / 10)\n};\nconst score = Object.values(b).reduce((a, x) => a + x, 0);\nconst tier = score >= 70 ? 'hot' : score >= 40 ? 'warm' : 'cold';\nconst route = {\n  hot:  ['Direct sales', 'Sales manager calls within 1 hour; book a demo'],\n  warm: ['Sales expert', 'Assign to expert; send proposal within 24h'],\n  cold: ['Nurturing', 'Add to automated email nurture campaign']\n}[tier];\nconst value = {'<50M':25,'50-200M':125,'200-500M':350,'>500M':700}[lead.budget] || 0;\nreturn [{ json: {\n  name: lead.name, company: lead.company, phone: lead.phone, email: lead.email,\n  role: lead.role, size: lead.size, budget: lead.budget, timeline: lead.timeline,\n  source: lead.source, need: lead.need,\n  score, tier, route: route[0], nextAction: route[1],\n  estimatedValueMToman: value,\n  aiSummary: ai.summary || '', productCategory: ai.productCategory || '',\n  breakdown: JSON.stringify(b), status: 'New', createdAt: lead.submittedAt\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        320,
+        -112
+      ],
+      "id": "c1fee370-1fb7-45ac-b989-64835be89e14",
+      "name": "Score & Classify"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "YOUR_SPREADSHEET_NAME"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1572208784,
+          "mode": "list",
+          "cachedResultName": "Leads"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "role",
+              "displayName": "role",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "size",
+              "displayName": "size",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "budget",
+              "displayName": "budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "timeline",
+              "displayName": "timeline",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "need",
+              "displayName": "need",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "score",
+              "displayName": "score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "tier",
+              "displayName": "tier",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "route",
+              "displayName": "route",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nextAction",
+              "displayName": "nextAction",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "estimatedValueMToman",
+              "displayName": "estimatedValueMToman",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "aiSummary",
+              "displayName": "aiSummary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "productCategory",
+              "displayName": "productCategory",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "breakdown",
+              "displayName": "breakdown",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "createdAt",
+              "displayName": "createdAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        496,
+        -112
+      ],
+      "id": "b9662866-a70d-4d70-95dc-2c8aed34ae48",
+      "name": "Save to Leads DB",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "YOUR_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Score & Classify').item.json.tier }}",
+                    "rightValue": "hot",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "90a3efd6-539e-49f2-aacd-1e67511469bc"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "id": "23d6243c-4a93-4d93-976a-cf585e6412c5",
+                    "leftValue": "={{ $('Score & Classify').item.json.tier }}",
+                    "rightValue": "warm",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "id": "d77856ff-a88a-40b4-8d37-56140de342f9",
+                    "leftValue": "={{ $('Score & Classify').item.json.tier }}",
+                    "rightValue": "cold",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.5,
+      "position": [
+        720,
+        -112
+      ],
+      "id": "05693c71-1783-426d-ba99-cb82137a16a6",
+      "name": "Route by Tier"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                6
+              ],
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -1552,
+        272
+      ],
+      "id": "cfc61662-b527-43d2-80fc-c0bb3dcdff89",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "YOUR_SPREADSHEET_NAME"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1572208784,
+          "mode": "list",
+          "cachedResultName": "Leads"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1328,
+        272
+      ],
+      "id": "896fc2f1-d790-4e42-8789-d2b82f8ff0b5",
+      "name": "Read All Leads",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "YOUR_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const leads = $input.all().map(i => i.json).filter(l => l.tier);\nconst n = leads.length;\nif (!n) return [{ json: { html: '<p>No leads this period.</p>' } }];\nconst by = t => leads.filter(l => l.tier === t);\nconst sum = a => a.reduce((x, l) => x + Number(l.estimatedValueMToman || 0), 0);\nconst avg = Math.round(leads.reduce((x, l) => x + Number(l.score), 0) / n);\nconst src = {};\nleads.forEach(l => { (src[l.source || 'Unknown'] = src[l.source || 'Unknown'] || []).push(Number(l.score)); });\nconst top = [...leads].sort((a, b) => b.score - a.score).slice(0, 5);\nconst html = `<h2>Weekly Lead Report</h2>\n<p>Total leads: <b>${n}</b> | Avg score: <b>${avg}</b></p>\n<ul>\n<li>Hot: ${by('hot').length} (value ${sum(by('hot'))} M Toman)</li>\n<li>Warm: ${by('warm').length} (value ${sum(by('warm'))} M Toman)</li>\n<li>Cold: ${by('cold').length}</li></ul>\n<h3>Source quality (avg score)</h3><ul>${Object.entries(src).map(([k, v]) =>\n `<li>${k}: ${Math.round(v.reduce((a, b) => a + b, 0) / v.length)} (${v.length} leads)</li>`).join('')}</ul>\n<h3>Top 5 opportunities</h3><ol>${top.map(l =>\n `<li>${l.name} (${l.company || '-'}) – ${l.score} – ${l.nextAction}</li>`).join('')}</ol>`;\nreturn [{ json: { html } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1104,
+        272
+      ],
+      "id": "6cc6d34f-88bb-4e2b-a563-7722853d70b4",
+      "name": "Build Report"
+    },
+    {
+      "parameters": {
+        "sendTo": "your-email@example.com",
+        "subject": "weekly Lead Report",
+        "message": "={{ $json.html }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -880,
+        272
+      ],
+      "id": "1a95eeb2-4c19-4359-bfcc-f33f554e5343",
+      "name": "Email Management Report",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "YOUR_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "your-email@example.com",
+        "subject": "= HOT lead: {{ $('Score & Classify').item.json.name }} ({{ $('Score & Classify').item.json.score }})",
+        "message": "=<p><b>{{ $('Score & Classify').item.json.name }}</b> – {{ $('Score & Classify').item.json.company }}<br> Phone: {{ $('Score & Classify').item.json.phone }}<br> Budget: {{ $('Score & Classify').item.json.budget }}</p> <p>{{ $('Score & Classify').item.json.aiSummary }}</p> <p><b>Action:</b> {{ $('Score & Classify').item.json.nextAction }}</p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        944,
+        -224
+      ],
+      "id": "c1677ea6-5264-447d-a1a0-d022bc85fbaf",
+      "name": "Alert Sales Manager (Hot)",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "YOUR_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "your-email@example.com",
+        "subject": "=Warm lead: {{ $('Score & Classify').item.json.name }}",
+        "message": "=<p><b>{{ $('Score & Classify').item.json.name }}</b> – {{ $('Score & Classify').item.json.company }}<br> <br>\n<p>{{ $('Score & Classify').item.json.aiSummary }}</p> <p><b>Action:</b> {{ $('Score & Classify').item.json.nextAction }}</p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        944,
+        -64
+      ],
+      "id": "cdcb7753-5123-4ab5-bb91-fc73ea5687f0",
+      "name": "Alert Sales Manager (Warm)1",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "YOUR_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Score & Classify').item.json.email }}",
+        "subject": "=Thanks for your interest",
+        "message": "=<p>Hi {{ $('Score & Classify').item.json.name }}, thank you for contacting us. We will send you useful resources soon.</p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        960,
+        128
+      ],
+      "id": "5266dbc2-6d46-4c0c-b3d1-e775a8556e40",
+      "name": "Alert Sales Manager (Cold)",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "YOUR_CREDENTIAL_NAME"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Request a Consultation": {
+      "main": [
+        [
+          {
+            "node": "Validate & Normalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate & Normalize": {
+      "main": [
+        [
+          {
+            "node": "Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid?": {
+      "main": [
+        [
+          {
+            "node": "Read Existing Leads",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Incomplete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Existing Leads": {
+      "main": [
+        [
+          {
+            "node": "Duplicate Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Duplicate Check": {
+      "main": [
+        [
+          {
+            "node": "Is Duplicate?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Duplicate?": {
+      "main": [
+        [
+          {
+            "node": "Log Duplicate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Lead Analyst Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Lead Analyst Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Lead Analyst Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead Analyst Agent": {
+      "main": [
+        [
+          {
+            "node": "Score & Classify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score & Classify": {
+      "main": [
+        [
+          {
+            "node": "Save to Leads DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to Leads DB": {
+      "main": [
+        [
+          {
+            "node": "Route by Tier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Tier": {
+      "main": [
+        [
+          {
+            "node": "Alert Sales Manager (Hot)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Alert Sales Manager (Warm)1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Alert Sales Manager (Cold)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Read All Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read All Leads": {
+      "main": [
+        [
+          {
+            "node": "Build Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Report": {
+      "main": [
+        [
+          {
+            "node": "Email Management Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "nodeGroups": [],
+  "tags": []
+}
